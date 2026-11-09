@@ -79,6 +79,7 @@
                                 <th>Layanan</th>
                                 <th>Tanggal</th>
                                 <th>Status</th>
+                                <th>Pembayaran</th>
                             </tr>
                         </thead>
                         <tbody id="booking-table-body">
@@ -95,6 +96,10 @@
                                     data-location="{{ $booking->event_location }}"
                                     data-notes="{{ $booking->notes ?? '-' }}"
                                     data-status="{{ $booking->status }}"
+                                    data-total="Rp {{ number_format($booking->total_price, 0, ',', '.') }}"
+                                    data-payment="{{ $booking->payment_status }}"
+                                    data-method="{{ $booking->payment_method ?? '-' }}"
+                                    data-proof="{{ $booking->payment_proof ? asset('storage/' . $booking->payment_proof) : '' }}"
                                     data-update-url="{{ route('admin.bookings.update', $booking) }}"
                                 >
                                     <td>
@@ -107,10 +112,15 @@
                                             {{ $booking->status }}
                                         </span>
                                     </td>
+                                    <td>
+                                        <span class="status {{ $booking->payment_status === 'Dibayar' ? 'status-selesai' : 'status-menunggu' }}">
+                                            {{ $booking->payment_status }}
+                                        </span>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="empty-state">
+                                    <td colspan="5" class="empty-state">
                                         Belum ada booking masuk.
                                     </td>
                                 </tr>
@@ -163,6 +173,18 @@
                         <strong id="detail-notes">-</strong>
                     </div>
 
+                    <div class="detail-item">
+                        <small>Total</small>
+                        <strong id="detail-total">-</strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <small>Pembayaran</small>
+                        <strong id="detail-payment">-</strong>
+                        <span id="detail-method">-</span>
+                        <a id="detail-proof" href="#" target="_blank" class="text-link hidden">Lihat bukti pembayaran</a>
+                    </div>
+
                     <div class="detail-status-update">
                         <small>Ubah Status</small>
 
@@ -178,6 +200,26 @@
                                 </button>
                                 <button type="button" class="btn btn-light" id="finish-booking">
                                     Selesai
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="detail-status-update">
+                        <small>Verifikasi Pembayaran</small>
+
+                        <form method="POST" id="booking-payment-form">
+                            @csrf
+                            @method('PATCH')
+
+                            <input type="hidden" name="payment_status" id="payment-status-input">
+
+                            <div class="detail-actions">
+                                <button type="button" class="btn btn-primary" id="paid-booking">
+                                    Tandai Dibayar
+                                </button>
+                                <button type="button" class="btn btn-light" id="reject-payment">
+                                    Tolak Bukti
                                 </button>
                             </div>
                         </form>
@@ -358,6 +400,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const statusInput = document.getElementById('booking-status-input');
     const confirmButton = document.getElementById('confirm-booking');
     const finishButton = document.getElementById('finish-booking');
+    const payForm = document.getElementById('booking-payment-form');
+    const payInput = document.getElementById('payment-status-input');
+    const paidButton = document.getElementById('paid-booking');
+    const rejectButton = document.getElementById('reject-payment');
+    const proofLink = document.getElementById('detail-proof');
     const searchInput = document.getElementById('booking-search');
 
     function selectBooking(row) {
@@ -371,17 +418,32 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('detail-type').textContent = row.dataset.type;
         document.getElementById('detail-location').textContent = row.dataset.location;
         document.getElementById('detail-notes').textContent = row.dataset.notes || '-';
+        document.getElementById('detail-total').textContent = row.dataset.total;
+        document.getElementById('detail-payment').textContent = row.dataset.payment;
+        document.getElementById('detail-method').textContent = 'Metode: ' + row.dataset.method;
+
+        if (row.dataset.proof) {
+            proofLink.href = row.dataset.proof;
+            proofLink.classList.remove('hidden');
+        } else {
+            proofLink.classList.add('hidden');
+        }
 
         const status = document.getElementById('detail-status');
         status.textContent = row.dataset.status;
         status.className = 'status status-' + row.dataset.status.toLowerCase();
         form.action = row.dataset.updateUrl;
+        payForm.action = row.dataset.updateUrl;
 
         empty.classList.add('hidden');
         detail.classList.remove('hidden');
 
         confirmButton.disabled = row.dataset.status !== 'Menunggu';
         finishButton.disabled = row.dataset.status !== 'Dikonfirmasi';
+
+        const waiting = ['Menunggu Verifikasi', 'Bayar di Tempat'].includes(row.dataset.payment);
+        paidButton.disabled = !waiting;
+        rejectButton.disabled = row.dataset.payment !== 'Menunggu Verifikasi';
     }
 
     rows.forEach(row => {
@@ -405,6 +467,20 @@ document.addEventListener('DOMContentLoaded', function () {
         if (form.action && !finishButton.disabled) {
             statusInput.value = 'Selesai';
             form.submit();
+        }
+    });
+
+    paidButton.addEventListener('click', () => {
+        if (payForm.action && !paidButton.disabled) {
+            payInput.value = 'Dibayar';
+            payForm.submit();
+        }
+    });
+
+    rejectButton.addEventListener('click', () => {
+        if (payForm.action && !rejectButton.disabled) {
+            payInput.value = 'Belum Dibayar';
+            payForm.submit();
         }
     });
 

@@ -21,6 +21,9 @@ Route::middleware('role:customer')->group(function () {
     Route::get('/booking/{service?}', [BookingController::class, 'create'])->name('bookings.create');
     Route::post('/booking', [BookingController::class, 'store'])->name('bookings.store');
     Route::delete('/booking/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
+
+    Route::get('/booking/{booking}/bayar', [BookingController::class, 'payForm'])->name('bookings.pay');
+    Route::post('/booking/{booking}/bayar', [BookingController::class, 'payStore'])->name('bookings.pay.store');
 });
 
 Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
@@ -31,7 +34,7 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function
     Route::put('/layanan/{service}', [AdminServiceController::class, 'update'])->name('services.update');
     Route::delete('/layanan/{service}', [AdminServiceController::class, 'destroy'])->name('services.destroy');
     Route::patch('/booking/{booking}', [BookingController::class, 'updateStatus'])->name('bookings.update');
-    
+
     Route::get('/transaksi', function () {
         return view('admin.transactions', [
             'bookings' => \App\Models\Booking::with(['customer', 'service'])

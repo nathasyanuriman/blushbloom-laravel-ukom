@@ -10,7 +10,7 @@
     <nav>
         <a class="active" href="{{ route('dashboard') }}">Dashboard</a>
         <a href="{{ route('services.index') }}">Layanan</a>
-        <a href="{{ route('bookings.create') }}">Booking Saya</a>
+        <a href="{{ route('dashboard') }}">Booking Saya</a>
     </nav>
     <div class="customer-header-actions">
         <span>Hai, {{ session('user_name') }}</span>
@@ -32,6 +32,14 @@
     </header>
 
     @include('partials.flash')
+
+    @if($errors->any())
+        <div class="flash error">
+            @foreach($errors->all() as $error)
+                <div>{{ $error }}</div>
+            @endforeach
+        </div>
+    @endif
 
     <div class="customer-stats">
         <article class="customer-stat">
@@ -73,6 +81,7 @@
                         <th>Tanggal Acara</th>
                         <th>Jenis Acara</th>
                         <th>Status</th>
+                        <th>Pembayaran</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -94,12 +103,22 @@
                                 </span>
                             </td>
                             <td>
+                                <span class="status {{ $booking->payment_status === 'Dibayar' ? 'status-selesai' : 'status-menunggu' }}">
+                                    {{ $booking->payment_status }}
+                                </span>
+                                @if($booking->payment_method)
+                                    <small>{{ $booking->payment_method }}</small>
+                                @endif
+                            </td>
+                            <td>
                                 @if($booking->status === 'Menunggu')
                                     <form method="POST" action="{{ route('bookings.destroy', $booking) }}">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="table-action" data-confirm="Batalkan booking ini?">Batalkan</button>
                                     </form>
+                                @elseif($booking->status === 'Dikonfirmasi' && in_array($booking->payment_status, ['Belum Dibayar', 'Bayar di Tempat']))
+                                    <a href="{{ route('bookings.pay', $booking) }}" class="btn btn-primary btn-small">Bayar</a>
                                 @else
                                     <span class="muted">—</span>
                                 @endif
@@ -107,7 +126,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="empty-state">
+                            <td colspan="6" class="empty-state">
                                 <span>✿</span>
                                 <strong>Belum ada booking</strong>
                                 <p>Booking pertama kamu akan muncul di sini.</p>

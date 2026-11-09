@@ -6,3 +6,4 @@
 /.env
 /.phpunit.cache
 .phpunit.result.cache
+public/img/qris.*

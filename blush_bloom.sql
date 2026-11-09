@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 09 Nov 2026 pada 05.06
+-- Waktu pembuatan: 09 Nov 2026 pada 12.58
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -37,7 +37,9 @@ CREATE TABLE `bookings` (
   `event_type` varchar(255) NOT NULL,
   `notes` text DEFAULT NULL,
   `status` enum('Menunggu','Dikonfirmasi','Selesai','Dibatalkan') NOT NULL DEFAULT 'Menunggu',
-  `payment_status` enum('Belum Dibayar','Dibayar') NOT NULL DEFAULT 'Belum Dibayar',
+  `payment_status` enum('Belum Dibayar','Menunggu Verifikasi','Bayar di Tempat','Dibayar') NOT NULL DEFAULT 'Belum Dibayar',
+  `payment_method` varchar(20) DEFAULT NULL,
+  `payment_proof` varchar(255) DEFAULT NULL,
   `total_price` int(10) UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -47,12 +49,13 @@ CREATE TABLE `bookings` (
 -- Dumping data untuk tabel `bookings`
 --
 
-INSERT INTO `bookings` (`id`, `customer_id`, `service_id`, `event_date`, `event_time`, `event_location`, `event_type`, `notes`, `status`, `payment_status`, `total_price`, `created_at`, `updated_at`) VALUES
-(2, 7, 4, '2026-10-25', '16:20:00', 'jl melati', 'Pesta', 'keren tapi elegan ya', 'Selesai', 'Dibayar', 450000, '2026-10-23 09:44:00', '2026-10-23 09:49:03'),
-(4, 7, 5, '2026-10-29', '06:00:00', 'JL.Bintara raya 8', 'Lainnya', 'Gusti', 'Selesai', 'Dibayar', 300000, '2026-10-26 03:22:17', '2026-10-30 12:02:42'),
-(8, 8, 6, '2026-10-31', '14:04:00', 'jl kayuringin', 'Lamaran', NULL, 'Selesai', 'Dibayar', 900000, '2026-10-30 12:05:23', '2026-11-05 12:33:37'),
-(11, 8, 5, '2026-11-05', '20:28:00', 'jl.kemangi', 'Lainnya', 'yang bagus ya ka', 'Menunggu', 'Belum Dibayar', 300000, '2026-11-05 12:29:03', '2026-11-05 12:29:03'),
-(12, 9, 3, '2026-11-10', '09:00:00', 'bukit pelangi', 'Prewedding', 'temanya pink', 'Dikonfirmasi', 'Belum Dibayar', 750000, '2026-11-05 12:32:22', '2026-11-05 12:33:17');
+INSERT INTO `bookings` (`id`, `customer_id`, `service_id`, `event_date`, `event_time`, `event_location`, `event_type`, `notes`, `status`, `payment_status`, `payment_method`, `payment_proof`, `total_price`, `created_at`, `updated_at`) VALUES
+(2, 7, 4, '2026-10-25', '16:20:00', 'jl melati', 'Pesta', 'keren tapi elegan ya', 'Selesai', 'Dibayar', NULL, NULL, 450000, '2026-10-23 09:44:00', '2026-10-23 09:49:03'),
+(4, 7, 5, '2026-10-29', '06:00:00', 'JL.Bintara raya 8', 'Lainnya', 'Gusti', 'Selesai', 'Dibayar', NULL, NULL, 300000, '2026-10-26 03:22:17', '2026-10-30 12:02:42'),
+(8, 8, 6, '2026-10-31', '14:04:00', 'jl kayuringin', 'Lamaran', NULL, 'Selesai', 'Dibayar', NULL, NULL, 900000, '2026-10-30 12:05:23', '2026-11-05 12:33:37'),
+(11, 8, 5, '2026-11-05', '20:28:00', 'jl.kemangi', 'Lainnya', 'yang bagus ya ka', 'Dikonfirmasi', 'Dibayar', 'Tunai', NULL, 300000, '2026-11-05 12:29:03', '2026-11-09 11:53:03'),
+(12, 9, 3, '2026-11-10', '09:00:00', 'bukit pelangi', 'Prewedding', 'temanya pink', 'Dikonfirmasi', 'Belum Dibayar', NULL, NULL, 750000, '2026-11-05 12:32:22', '2026-11-09 11:46:01'),
+(13, 8, 4, '2026-11-09', '21:30:00', 'jakarta', 'Pesta', 'cantik ya pink', 'Selesai', 'Dibayar', 'QRIS', 'payments/7HOIHinTC8HVtZEF0jKlFqSR3CRWFXETIYuE3zc9.jpg', 450000, '2026-11-09 11:31:01', '2026-11-09 11:45:25');
 
 -- --------------------------------------------------------
 
@@ -172,7 +175,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT untuk tabel `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT untuk tabel `migrations`
